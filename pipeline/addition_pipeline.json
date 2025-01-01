@@ -1,0 +1,164 @@
+{
+  "components": {
+    "comp-add": {
+      "executorLabel": "exec-add",
+      "inputDefinitions": {
+        "parameters": {
+          "a": {
+            "parameterType": "NUMBER_DOUBLE"
+          },
+          "b": {
+            "parameterType": "NUMBER_DOUBLE"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "parameters": {
+          "Output": {
+            "parameterType": "NUMBER_DOUBLE"
+          }
+        }
+      }
+    },
+    "comp-add-2": {
+      "executorLabel": "exec-add-2",
+      "inputDefinitions": {
+        "parameters": {
+          "a": {
+            "parameterType": "NUMBER_DOUBLE"
+          },
+          "b": {
+            "parameterType": "NUMBER_DOUBLE"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "parameters": {
+          "Output": {
+            "parameterType": "NUMBER_DOUBLE"
+          }
+        }
+      }
+    }
+  },
+  "deploymentSpec": {
+    "executors": {
+      "exec-add": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "add"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.11.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef add(a: float, b: float) -> float:\n    \"\"\"Calculates the sum of two arguments.\"\"\"\n    return a + b\n\n"
+          ],
+          "image": "python:3.8"
+        }
+      },
+      "exec-add-2": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "add"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.11.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef add(a: float, b: float) -> float:\n    \"\"\"Calculates the sum of two arguments.\"\"\"\n    return a + b\n\n"
+          ],
+          "image": "python:3.8"
+        }
+      }
+    }
+  },
+  "pipelineInfo": {
+    "description": "An example pipeline that performs addition calculations.",
+    "name": "addition-pipeline"
+  },
+  "root": {
+    "dag": {
+      "tasks": {
+        "add": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-add"
+          },
+          "inputs": {
+            "parameters": {
+              "a": {
+                "componentInputParameter": "a"
+              },
+              "b": {
+                "runtimeValue": {
+                  "constant": 4.0
+                }
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "add"
+          }
+        },
+        "add-2": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-add-2"
+          },
+          "dependentTasks": [
+            "add"
+          ],
+          "inputs": {
+            "parameters": {
+              "a": {
+                "taskOutputParameter": {
+                  "outputParameterKey": "Output",
+                  "producerTask": "add"
+                }
+              },
+              "b": {
+                "componentInputParameter": "b"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "add-2"
+          }
+        }
+      }
+    },
+    "inputDefinitions": {
+      "parameters": {
+        "a": {
+          "defaultValue": 1.0,
+          "isOptional": true,
+          "parameterType": "NUMBER_DOUBLE"
+        },
+        "b": {
+          "defaultValue": 7.0,
+          "isOptional": true,
+          "parameterType": "NUMBER_DOUBLE"
+        }
+      }
+    }
+  },
+  "schemaVersion": "2.1.0",
+  "sdkVersion": "kfp-2.11.0"
+}
